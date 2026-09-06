@@ -10,5 +10,17 @@ pipeline {
                 checkout scm
             }
         }
+
+             stage('Build') {
+                    steps {
+                    // 'sh' tells Jenkins to run a Linux shell command
+                   // This builds the .jar file but skips testing for now
+
+                        sh './mvnw clean package -DskipTests'
+
+                        // Let's print the contents of the target folder so you can see the JAR!
+                         sh 'ls -lh target/'
+                    }
+                }
     }
 }
