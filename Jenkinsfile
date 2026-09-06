@@ -28,5 +28,12 @@ pipeline {
         sh './mvnw test'
         }
         }
+
+        stage('Dependency Check'){
+
+        // This command downloads the CVE database and checks your pom.xml
+
+        sh './mvnw dependency-check:check'
+        }
     }
 }
