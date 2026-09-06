@@ -29,10 +29,9 @@ pipeline {
 
   stage('Dependency Check') {
               steps {
-                  // withCredentials securely injects the secret into an environment variable
                   withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                      // We use $NVD_API_KEY to pass it to the Maven plugin
-                      sh './mvnw dependency-check:check -DnvdApiKey=$NVD_API_KEY'
+                      // Added nvdApiDelay to slow down requests and prevent 403 errors
+                      sh './mvnw dependency-check:check -DnvdApiKey=$NVD_API_KEY -DnvdApiDelay=16000'
                   }
               }
           }
