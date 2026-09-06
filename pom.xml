@@ -53,9 +53,14 @@
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <version>9.0.9</version>
+
                 <configuration>
-                    <!-- Fail the Jenkins pipeline if a HIGH or CRITICAL vulnerability (score 7 or above) is found -->
+                    <!-- Fail if CVSS score is 7 or higher -->
                     <failBuildOnCVSS>7</failBuildOnCVSS>
+
+                    <!-- Read NVD API key from environment variable -->
+
+                    <!-- Wait 16 seconds between NVD API requests -->
                 </configuration>
             </plugin>
 
