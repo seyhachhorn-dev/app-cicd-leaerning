@@ -1,39 +1,37 @@
 pipeline {
-    // 'agent any' means Jenkins can run this on any available executor.
+    // Jenkins can run this pipeline on any available executor
     agent any
 
     stages {
-        // A stage is a logical block of work (like Checkout, Build, Test)
+
         stage('Checkout') {
             steps {
-                // 'checkout scm' tells Jenkins to download the code from GitHub
+                // Download the source code from GitHub
                 checkout scm
             }
         }
 
-             stage('Build') {
-                    steps {
-                    // 'sh' tells Jenkins to run a Linux shell command
-                   // This builds the .jar file but skips testing for now
+        stage('Build') {
+            steps {
+                // Build the JAR file and skip tests for now
+                sh './mvnw clean package -DskipTests'
 
-                        sh './mvnw clean package -DskipTests'
+                // Show the generated JAR
+                sh 'ls -lh target/'
+            }
+        }
 
-                        // Let's print the contents of the target folder so you can see the JAR!
-                         sh 'ls -lh target/'
-                    }
-                }
         stage('Test') {
-
-        steps {
-        sh './mvnw test'
+            steps {
+                sh './mvnw test'
+            }
         }
-        }
 
-        stage('Dependency Check'){
-
-        // This command downloads the CVE database and checks your pom.xml
-
-        sh './mvnw dependency-check:check'
+        stage('Dependency Check') {
+            steps {
+                // Check dependencies for known CVEs
+                sh './mvnw dependency-check:check'
+            }
         }
     }
 }
