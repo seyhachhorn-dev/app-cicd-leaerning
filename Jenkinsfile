@@ -22,5 +22,11 @@ pipeline {
                          sh 'ls -lh target/'
                     }
                 }
+        stage('Test') {
+
+        steps {
+        sh './mvnw test'
+        }
+        }
     }
 }
