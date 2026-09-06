@@ -27,11 +27,14 @@ pipeline {
             }
         }
 
-        stage('Dependency Check') {
-            steps {
-                // Check dependencies for known CVEs
-                sh './mvnw dependency-check:check'
-            }
-        }
+      stage('Dependency Check') {
+          steps {
+              withCredentials([
+                  string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')
+              ]) {
+                  sh './mvnw dependency-check:check -DnvdApiKey=$NVD_API_KEY'
+              }
+          }
+      }
     }
 }
