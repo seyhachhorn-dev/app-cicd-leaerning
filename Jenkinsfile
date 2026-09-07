@@ -80,5 +80,21 @@ pipeline {
                  echo "Skipping Trivy scan for now..."
                     }
                 }
+        stage('Docker Push') {
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                            // 1. Log in to Docker Hub securely
+                            // We use echo and --password-stdin because it is a DevOps best practice.
+                            // It hides the password from the Linux process history.
+                            sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+
+                            // 2. Push the versioned tag
+                            sh "docker push seyhadev/cicd-demo:${env.BUILD_NUMBER}"
+
+                            // 3. Push the latest tag
+                            sh "docker push seyhadev/cicd-demo:latest"
+                        }
+                    }
+                }
     }
 }
