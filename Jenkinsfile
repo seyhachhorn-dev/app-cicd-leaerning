@@ -120,5 +120,19 @@ pipeline {
                 sh "docker run -d -p 9090:9090 --name my-live-app seyhadev/cicd-demo:latest"
             }
         }
+
+        post {
+                success {
+                    echo '✅ Pipeline succeeded! The new Spring Boot version is live.'
+                    // In a real project, you could add: slackSend(message: "Deployment successful!")
+                }
+                failure {
+                    echo '❌ Pipeline failed! Check the logs above to find the error.'
+                    // In a real project, you could add: emailext(subject: "Build Failed", to: "dev-team@company.com")
+                }
+            }
+
+
     }
+
 }
