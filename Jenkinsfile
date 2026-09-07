@@ -58,63 +58,67 @@ pipeline {
             }
         }
 
-        stage('Docker Build'){
+        stage('Docker Build') {
+            steps {
 
+                // We use double quotes (" ") here instead of single quotes (' ')
+                // In Groovy, double quotes allow us to inject variables like ${env.BUILD_NUMBER}
+                sh "docker build -t seyhadev/cicd-demo:${env.BUILD_NUMBER} ."
+                sh "docker build -t seyhadev/cicd-demo:latest ."
 
-        steps {
-
-        // We use double quotes (" ") here instead of single quotes (' ')
-        // In Groovy, double quotes allow us to inject variables like ${env.BUILD_NUMBER}
-                        sh "docker build -t seyhadev/cicd-demo:${env.BUILD_NUMBER} ."
-                        sh "docker build -t seyhadev/cicd-demo:latest ."
-                        // Let's print our new images to the logs to verify!
-                        sh "docker images | grep cicd-demo"
-        }
-
+                // Let's print our new images to the logs to verify!
+                sh "docker images | grep cicd-demo"
+            }
         }
 
         stage('Trivy Scan') {
-                    steps {
-                        // Added --timeout 15m to prevent the DB download from failing on slow networks
-//                         sh "trivy image --timeout 15m --severity HIGH,CRITICAL --exit-code 1 --no-progress seyhadev/cicd-demo:${env.BUILD_NUMBER}"
-                 echo "Skipping Trivy scan for now..."
-                    }
-                }
+            steps {
+                // Added --timeout 15m to prevent the DB download from failing on slow networks
+                // sh "trivy image --timeout 15m --severity HIGH,CRITICAL --exit-code 1 --no-progress seyhadev/cicd-demo:${env.BUILD_NUMBER}"
+
+                echo "Skipping Trivy scan for now..."
+            }
+        }
+
         stage('Docker Push') {
-                    steps {
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                            // 1. Log in to Docker Hub securely
-                            // We use echo and --password-stdin because it is a DevOps best practice.
-                            // It hides the password from the Linux process history.
-                            sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-hub-creds',
+                        passwordVariable: 'DOCKER_PASS',
+                        usernameVariable: 'DOCKER_USER'
+                    )
+                ]) {
 
-                            // 2. Push the versioned tag
-                            sh "docker push seyhadev/cicd-demo:${env.BUILD_NUMBER}"
+                    // 1. Log in to Docker Hub securely
+                    // We use echo and --password-stdin because it is a DevOps best practice.
+                    // It hides the password from the Linux process history.
+                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
 
-                            // 3. Push the latest tag
-                            sh "docker push seyhadev/cicd-demo:latest"
-                        }
-                    }
+                    // 2. Push the versioned tag
+                    sh "docker push seyhadev/cicd-demo:${env.BUILD_NUMBER}"
 
-              stages('Deploy') {
+                    // 3. Push the latest tag
+                    sh "docker push seyhadev/cicd-demo:latest"
+                }
+            }
+        }
 
-              steps{
+        stage('Deploy') {
+            steps {
 
+                // 1. Pull the latest image
+                sh "docker pull seyhadev/cicd-demo:latest"
 
-              // 1. Pull the latest image
-              sh "docker pull seyhadev/cicd-demo:latest"
+                // 2. Stop and remove the old container
+                // We use '|| true' at the end. This is a Linux trick!
+                // It means: "Try to stop the container, but if it doesn't exist yet, don't fail the pipeline, just keep going."
+                sh "docker stop my-live-app || true"
+                sh "docker rm my-live-app || true"
 
-              // 2. Stop and remove the old container
-                              // We use '|| true' at the end. This is a Linux trick!
-                              // It means: "Try to stop the container, but if it doesn't exist yet, don't fail the pipeline, just keep going."
-                              sh "docker stop my-live-app || true"
-                              sh "docker rm my-live-app || true"
-                        // 3. Run the new container in the background
-                    sh "docker run -d -p 9090:9090 --name my-live-app seyhadev/cicd-demo:latest"
-
-
-              }
-              }
-          }
+                // 3. Run the new container in the background
+                sh "docker run -d -p 9090:9090 --name my-live-app seyhadev/cicd-demo:latest"
+            }
+        }
     }
 }
