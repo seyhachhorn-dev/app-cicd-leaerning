@@ -95,6 +95,26 @@ pipeline {
                             sh "docker push seyhadev/cicd-demo:latest"
                         }
                     }
-                }
+
+              stages('Deploy') {
+
+              steps{
+
+
+              // 1. Pull the latest image
+              sh "docker pull seyhadev/cicd-demo:latest"
+
+              // 2. Stop and remove the old container
+                              // We use '|| true' at the end. This is a Linux trick!
+                              // It means: "Try to stop the container, but if it doesn't exist yet, don't fail the pipeline, just keep going."
+                              sh "docker stop my-live-app || true"
+                              sh "docker rm my-live-app || true"
+                        // 3. Run the new container in the background
+                    sh "docker run -d -p 9090:9090 --name my-live-app seyhadev/cicd-demo:latest"
+
+
+              }
+              }
+          }
     }
 }
