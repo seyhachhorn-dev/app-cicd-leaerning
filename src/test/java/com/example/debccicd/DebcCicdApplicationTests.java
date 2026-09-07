@@ -19,7 +19,7 @@ class DebcCicdApplicationTests {
     void shouldReturnHelloMessage() throws Exception{
         mockMvc.perform(get("/api/hello"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Hello from DEBC CICD demo This wrong message will fail the test!"));
+                .andExpect(jsonPath("$.message").value("Hello from DEBC CICD demo"));
     }
     }
 
