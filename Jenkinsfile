@@ -57,5 +57,20 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Build'){
+
+
+        steps {
+
+        // We use double quotes (" ") here instead of single quotes (' ')
+        // In Groovy, double quotes allow us to inject variables like ${env.BUILD_NUMBER}
+                        sh "docker build -t seyhadev/cicd-demo:${env.BUILD_NUMBER} ."
+                        sh "docker build -t seyhadev/cicd-demo:latest ."
+                        // Let's print our new images to the logs to verify!
+                        sh "docker images | grep cicd-demo"
+        }
+
+        }
     }
 }
