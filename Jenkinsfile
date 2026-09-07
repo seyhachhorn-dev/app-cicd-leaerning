@@ -61,19 +61,21 @@ pipeline {
         stage('Docker Build') {
             steps {
 
-                // We use double quotes (" ") here instead of single quotes (' ')
-                // In Groovy, double quotes allow us to inject variables like ${env.BUILD_NUMBER}
+                // Build versioned image
                 sh "docker build -t seyhadev/cicd-demo:${env.BUILD_NUMBER} ."
+
+                // Build latest image
                 sh "docker build -t seyhadev/cicd-demo:latest ."
 
-                // Let's print our new images to the logs to verify!
+                // Print images
                 sh "docker images | grep cicd-demo"
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                // Added --timeout 15m to prevent the DB download from failing on slow networks
+
+                // Temporarily skipping Trivy
                 // sh "trivy image --timeout 15m --severity HIGH,CRITICAL --exit-code 1 --no-progress seyhadev/cicd-demo:${env.BUILD_NUMBER}"
 
                 echo "Skipping Trivy scan for now..."
@@ -90,15 +92,13 @@ pipeline {
                     )
                 ]) {
 
-                    // 1. Log in to Docker Hub securely
-                    // We use echo and --password-stdin because it is a DevOps best practice.
-                    // It hides the password from the Linux process history.
+                    // Login to Docker Hub
                     sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
 
-                    // 2. Push the versioned tag
+                    // Push version
                     sh "docker push seyhadev/cicd-demo:${env.BUILD_NUMBER}"
 
-                    // 3. Push the latest tag
+                    // Push latest
                     sh "docker push seyhadev/cicd-demo:latest"
                 }
             }
@@ -107,32 +107,36 @@ pipeline {
         stage('Deploy') {
             steps {
 
-                // 1. Pull the latest image
+                // Pull latest image
                 sh "docker pull seyhadev/cicd-demo:latest"
 
-                // 2. Stop and remove the old container
-                // We use '|| true' at the end. This is a Linux trick!
-                // It means: "Try to stop the container, but if it doesn't exist yet, don't fail the pipeline, just keep going."
+                // Stop old container
                 sh "docker stop my-live-app || true"
+
+                // Remove old container
                 sh "docker rm my-live-app || true"
 
-                // 3. Run the new container in the background
+                // Run new container
                 sh "docker run -d -p 9090:9090 --name my-live-app seyhadev/cicd-demo:latest"
             }
         }
 
-        post {
-                success {
-                    echo '✅ Pipeline succeeded! The new Spring Boot version is live.'
-                    // In a real project, you could add: slackSend(message: "Deployment successful!")
-                }
-                failure {
-                    echo '❌ Pipeline failed! Check the logs above to find the error.'
-                    // In a real project, you could add: emailext(subject: "Build Failed", to: "dev-team@company.com")
-                }
-            }
+    } // <-- stages ends HERE
 
+
+    // post belongs to pipeline, NOT stages
+    post {
+
+        success {
+            echo '✅ Pipeline succeeded! The new Spring Boot version is live.'
+            // slackSend(message: "Deployment successful!")
+        }
+
+        failure {
+            echo '❌ Pipeline failed! Check the logs above to find the error.'
+            // emailext(subject: "Build Failed", to: "dev-team@company.com")
+        }
 
     }
 
-}
+} // <-- pipeline ends HERE
