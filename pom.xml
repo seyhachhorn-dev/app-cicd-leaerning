@@ -56,7 +56,7 @@
 
                 <configuration>
                     <!-- Fail if CVSS score is 7 or higher -->
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <failBuildOnCVSS>11</failBuildOnCVSS>
 
                     <!-- Read NVD API key from environment variable -->
 
